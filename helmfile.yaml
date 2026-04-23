@@ -1,0 +1,10 @@
+repositories: []
+
+releases:
+  - name: hello-world
+    chart: ./k8s/charts/hello-world
+    namespace: default
+    createNamespace: true
+    installed: true
+    values:
+      - ./k8s/charts/hello-world/values.yaml

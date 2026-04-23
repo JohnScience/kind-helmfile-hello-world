@@ -1,0 +1,4 @@
+scripts/__pycache__/
+
+rust/target/
+rust/Cargo.lock
