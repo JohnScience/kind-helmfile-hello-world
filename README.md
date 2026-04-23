@@ -36,21 +36,24 @@ Fetches the latest stable Rust version, builds the image, and tags it as `hello-
 ### 2. Deploy to kind
 
 ```sh
-python -m scripts.deploy
+python -m scripts.deploy            # dev (default)
+python -m scripts.deploy --env prod # prod
 ```
 
 This will:
 1. Run preflight checks (required binaries and helm plugins)
 2. Create a kind cluster named `kind` if one does not exist
 3. Load the `hello-world:latest` image into the cluster
-4. Run `helmfile apply`
+4. Run `helmfile -e <env> apply`
+
+Each environment deploys into its own namespace (`dev` or `prod`).
 
 ### 3. Verify
 
-Forward a local port to the service:
+Forward a local port to the service. Avoid port 8080 if Docker Desktop is running — it occupies that port.
 
 ```sh
-kubectl port-forward svc/hello-world-hello-world 9090:80
+kubectl port-forward -n dev svc/hello-world-hello-world 9090:80
 ```
 
 Then in another terminal:
@@ -62,15 +65,27 @@ curl http://127.0.0.1:9090/health
 
 Expected responses: `Hello, World!` and `ok`.
 
+## Environments
+
+| Environment | Namespace | Replicas | Pull policy |
+|-------------|-----------|----------|-------------|
+| `dev` | `dev` | 1 | `IfNotPresent` |
+| `prod` | `prod` | 2 | `Always` |
+
+Per-environment values live in `k8s/environments/<env>/values.yaml` and are merged on top of the base chart values.
+
 ## Project structure
 
 ```
 .
 ├── hello-world.dockerfile      # Multi-stage Docker build
-├── helmfile.yaml               # Helmfile release definition
+├── helmfile.yaml               # Helmfile environments + release definition
 ├── k8s/
-│   └── charts/
-│       └── hello-world/        # Local Helm chart
+│   ├── charts/
+│   │   └── hello-world/        # Local Helm chart (base values)
+│   └── environments/
+│       ├── dev/values.yaml     # Dev overrides
+│       └── prod/values.yaml    # Prod overrides
 ├── rust/
 │   ├── Cargo.toml              # Workspace root
 │   └── hello-world/
