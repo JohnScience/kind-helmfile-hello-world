@@ -1,10 +1,17 @@
+environments:
+  dev: {}
+  prod: {}
+
+---
+
 repositories: []
 
 releases:
   - name: hello-world
     chart: ./k8s/charts/hello-world
-    namespace: default
+    namespace: "{{ .Environment.Name }}"
     createNamespace: true
     installed: true
     values:
       - ./k8s/charts/hello-world/values.yaml
+      - ./k8s/environments/{{ .Environment.Name }}/values.yaml

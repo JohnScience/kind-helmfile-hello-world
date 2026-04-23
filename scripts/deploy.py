@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Deploy the hello-world helmfile application to a local kind cluster."""
 
+import argparse
 import os
 import platform
 import shutil
@@ -11,9 +12,19 @@ import sys
 # Configuration
 # ---------------------------------------------------------------------------
 
+_parser = argparse.ArgumentParser(description="Deploy hello-world to a kind cluster.")
+_parser.add_argument(
+    "-e", "--env",
+    choices=["dev", "prod"],
+    default="dev",
+    help="Target environment (default: dev)",
+)
+_args = _parser.parse_args()
+
 IMAGE_NAME   = os.environ.get("IMAGE_NAME",   "hello-world")
 IMAGE_TAG    = os.environ.get("IMAGE_TAG",    "latest")
 KIND_CLUSTER = os.environ.get("KIND_CLUSTER", "kind")
+ENV          = _args.env
 
 _OS         = platform.system()  # "Windows", "Darwin", "Linux"
 _FULL_IMAGE = f"{IMAGE_NAME}:{IMAGE_TAG}"
@@ -143,7 +154,7 @@ else:
 print(f"Loading image {_FULL_IMAGE} into kind cluster '{KIND_CLUSTER}'...")
 run(["kind", "load", "docker-image", _FULL_IMAGE, "--name", KIND_CLUSTER])
 
-print("Deploying via helmfile...")
-run(["helmfile", "apply"])
+print(f"Deploying via helmfile (env={ENV})...")
+run(["helmfile", "-e", ENV, "apply"])
 
 print("Deploy complete.")
